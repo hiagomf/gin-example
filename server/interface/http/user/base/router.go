@@ -3,9 +3,9 @@ package base
 import "github.com/gin-gonic/gin"
 
 func Router(r *gin.RouterGroup) {
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	r.GET("", findAll)
+	r.POST("", create)
+	r.GET(":user_id", findByID)
+	r.PUT(":user_id", update)
+	r.DELETE(":user_id", delete)
 }
