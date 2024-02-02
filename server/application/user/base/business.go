@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/hiagomf/gin-example/database"
+	"github.com/hiagomf/gin-example/domain/user/base"
 )
 
 // FindAll - find all users
@@ -18,13 +20,34 @@ func FindByID(ctx context.Context, in *uuid.UUID) (out *FindByIDResponse, err er
 
 // Create - create an user
 func Create(ctx context.Context, in *CreateRequest) (out *CreateResponse, err error) {
-	out = &CreateResponse{
+	tx, err := database.NewTransaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	repository := base.NewRepository(ctx, tx)
+
+	usr := &base.User{
 		Name:     in.Name,
 		Age:      in.Age,
 		Document: in.Document,
 	}
+	if err := repository.Insert(usr); err != nil {
+		return nil, err
+	}
 
-	return out, nil
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &CreateResponse{
+		ID:        usr.ID,
+		CreatedAt: usr.CreatedAt,
+		Name:      usr.Name,
+		Age:       usr.Age,
+		Document:  usr.Document,
+	}, nil
 }
 
 // Update - update an user
